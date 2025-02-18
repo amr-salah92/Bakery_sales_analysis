@@ -1,217 +1,172 @@
-USE bakery;
+/*
+BAKERY SALES ANALYSIS PROJECT
 
-SELECT * FROM bakery 
-LIMIT 5 ;
+This project analyzes sales data from a bakery to uncover business insights including:
+- Key sales metrics and product performance
+- Premium vs standard product categorization
+- Sales trends by time and product categories
+- Inventory turnover rates
+The analysis helps optimize product offerings, pricing strategies, and operational planning.
+*/
 
+-- ###############
+-- DATA PREPARATION
+-- ###############
+
+USE bakery;  -- Set database context
+
+-- Initial data inspection
+SELECT * FROM bakery LIMIT 5;
+
+-- Disable safe update mode for data modifications
 SET SQL_SAFE_UPDATES = 0;
 
+-- Fix column name with encoding artifact
 ALTER TABLE bakery
 CHANGE COLUMN ï»؟ID ID INT;
 
+-- Convert text dates to proper DATE format
 UPDATE bakery 
 SET DATE = STR_TO_DATE(date, '%c/%e/%Y');
 
--- BIGGEST & SMALL QUANTITY 
+-- #########################
+-- BASIC SALES METRICS ANALYSIS
+-- #########################
+
+-- Quantity extremes analysis
 SELECT  
-MAX(QUANTITY) AS Top_quantity,
-MIN(QUANTITY) AS SMALLEST_QUANTITY
- FROM bakery ;
--- TOP & BOTTOM UNIT_PRICE
+    MAX(QUANTITY) AS Top_quantity,
+    MIN(QUANTITY) AS Smallest_quantity
+FROM bakery;
+
+-- Price range analysis
 SELECT  
-MAX(unit_price) AS Top_UNIT_PRICE,
-MIN(unit_price) AS SMALLEST_UNIT_PRICE
- FROM bakery ;
--- START & END OF TRANSACTIONS
- SELECT  
-MAX(date) AS END_DATE,
-MIN(date) AS START_DATE
- FROM bakery ;
- 
- 
--- BEST SELLING ITEM 
-SELECT ITEM, 
-SUM(QUANTITY) AS TOTAL_QTY,
-ROUND(AVG(UNIT_PRICE),2) AS AVG_UPRICE,
-ROUND(SUM(TOTAL),2) AS TOTAL_SALES
- FROM bakery 
- GROUP BY ITEM
- ORDER BY TOTAL_SALES DESC;
- 
- 
- -- ABOVE AVG SELLING ITEM
--- Common Table Expression (CTE) to calculate the average quantity per item
-WITH ALL_AVG_QTY AS (
-  SELECT 
+    MAX(unit_price) AS Max_unit_price,
+    MIN(unit_price) AS Min_unit_price
+FROM bakery;
+
+-- Transaction timeframe analysis
+SELECT  
+    MAX(date) AS Last_transaction,
+    MIN(date) AS First_transaction
+FROM bakery;
+
+-- ########################
+-- PRODUCT PERFORMANCE ANALYSIS
+-- ########################
+
+-- Top selling products analysis
+SELECT 
     ITEM, 
-    AVG(QUANTITY) AS ITEM_AVG_QTY
-  FROM 
-    bakery
-  GROUP BY 
-    ITEM
-)
--- Main query to select items with average quantity above the overall average
-SELECT 
-  ITEM, 
-  ITEM_AVG_QTY AS AVG_QTY
-FROM 
-  ALL_AVG_QTY
-WHERE 
-  ITEM_AVG_QTY > (
+    SUM(QUANTITY) AS Total_quantity,
+    ROUND(AVG(UNIT_PRICE),2) AS Avg_price,
+    ROUND(SUM(TOTAL),2) AS Total_sales
+FROM bakery 
+GROUP BY ITEM
+ORDER BY Total_sales DESC;
+
+-- High-demand items (Above average quantity)
+WITH ItemAverages AS (
     SELECT 
-      AVG(QUANTITY) 
-    FROM 
-      bakery 
-    WHERE 
-      bakery.ITEM = ALL_AVG_QTY.ITEM
-  )
-ORDER BY 
-  AVG_QTY DESC;
+        ITEM, 
+        AVG(QUANTITY) AS Item_avg_qty
+    FROM bakery
+    GROUP BY ITEM
+)
+SELECT 
+    ITEM, 
+    Item_avg_qty AS Avg_quantity
+FROM ItemAverages
+WHERE Item_avg_qty > (SELECT AVG(QUANTITY) FROM bakery)
+ORDER BY Avg_quantity DESC;
 
--- Premium products
--- Step 1: Calculate the average unit price
+-- #########################
+-- PREMIUM PRODUCT ANALYSIS
+-- #########################
+
+-- Premium product identification
 WITH AveragePrice AS (
-  SELECT AVG(UNIT_PRICE) AS AVG_PRICE
-  FROM bakery
-)
-
--- Step 2: Define a threshold (e.g., 4 times the average price)
-, ThresholdPrice AS (
-  SELECT AVG_PRICE * 4 AS PREMIUM_THRESHOLD
-  FROM AveragePrice
-)
-
--- Step 3: Categorize items and calculate average unit price
-SELECT 
-  b.ITEM, 
-  AVG(b.UNIT_PRICE) AS AVG_UNIT,
-  CASE 
-    WHEN AVG(b.UNIT_PRICE) > t.PREMIUM_THRESHOLD THEN 'Premium'
-    ELSE 'Standard'
-  END AS ITEM_CATEGORY
-FROM 
-  bakery b
-CROSS JOIN 
-  ThresholdPrice t
-GROUP BY 
-  b.ITEM, t.PREMIUM_THRESHOLD
-ORDER BY 
-  AVG_UNIT DESC;
-
--- Premium Sales share
-WITH TOTAL_SALES AS (
-  SELECT SUM(TOTAL) AS ALL_SALES
-  FROM bakery
+    SELECT AVG(UNIT_PRICE) AS Avg_price FROM bakery
+),
+ThresholdPrice AS (
+    SELECT Avg_price * 4 AS Premium_threshold 
+    FROM AveragePrice
 )
 SELECT 
-  b.ITEM,
-  SUM(b.TOTAL) AS TOTAL_SALES,
-  (SUM(b.TOTAL) / ts.ALL_SALES)*100 AS PERCENT
-FROM 
-  bakery b, TOTAL_SALES ts
-WHERE 
-  b.ITEM IN ('ROYAL 6P', 'TARTE FRAISE 6P', 'TARTE FRAISE 4PER', 'TRAITEUR', 'TARTE FRUITS 4P')
-GROUP BY 
-  b.ITEM, ts.ALL_SALES
-ORDER BY 
-  TOTAL_SALES DESC;
+    b.ITEM, 
+    ROUND(AVG(b.UNIT_PRICE),2) AS Avg_price,
+    CASE 
+        WHEN AVG(b.UNIT_PRICE) > t.Premium_threshold THEN 'Premium'
+        ELSE 'Standard'
+    END AS Price_category
+FROM bakery b
+CROSS JOIN ThresholdPrice t
+GROUP BY b.ITEM
+ORDER BY Avg_price DESC;
 
--- fast and slow selling ITEM according to days interval 
-SELECT ITEM,
-  DATEDIFF(MAX((date)), MIN((date))) AS Days_interval
+-- Premium product sales contribution
+WITH TotalSales AS (
+    SELECT SUM(TOTAL) AS All_sales FROM bakery
+)
+SELECT 
+    b.ITEM,
+    ROUND(SUM(b.TOTAL),2) AS Item_sales,
+    ROUND((SUM(b.TOTAL)/ts.All_sales)*100, 2) AS Sales_percentage
+FROM bakery b, TotalSales ts
+WHERE b.ITEM IN ('ROYAL 6P', 'TARTE FRAISE 6P', 'TARTE FRAISE 4PER', 'TRAITEUR', 'TARTE FRUITS 4P')
+GROUP BY b.ITEM
+ORDER BY Item_sales DESC;
+
+-- ########################
+-- TEMPORAL ANALYSIS
+-- ########################
+
+-- Inventory turnover rate
+SELECT 
+    ITEM,
+    DATEDIFF(MAX(date), MIN(date)) AS Days_interval
 FROM bakery
 GROUP BY ITEM
 ORDER BY Days_interval;
 
--- percent of fast selling items 
-WITH TotalSales AS (
-  SELECT SUM(TOTAL) AS AllSales
-  FROM bakery
-),
-ItemSales AS (
-  SELECT ITEM, SUM(TOTAL) AS ItemTotal
-  FROM bakery
-  WHERE ITEM IN (
-    'PLAT 6.50E', 'DIVERS PATISSERIE', 'GACHE', 'DEMI BAGUETTE', 
-    'GAL FRANGIPANE 4P', 'PAILLE', 'TULIPE', 'SABLE F  P', 
-    'MACARON', 'ROYAL 6P', 'ROYAL', 'TARTELETTE CHOC', 
-    'TARTE FINE', 'PLAT 8.30E', 'BROWNIES', 'DIVERS BOISSONS', 
-    'FINANCIER', 'PALET BRETON', 'TRIANGLES'
-  )
-  GROUP BY ITEM
-)
-SELECT 
-  i.ITEM, 
-  i.ItemTotal AS TotalSales, 
-  (i.ItemTotal / t.AllSales) * 100 AS PercentSales
-FROM 
-  ItemSales i, 
-  TotalSales t
-ORDER BY 
-  PercentSales DESC;
-  
-  
-  -- best selling item by percent 
- WITH TotalSales AS (
-  SELECT SUM(TOTAL) AS AllSales
-  FROM bakery
-)
-SELECT 
-  b.ITEM, 
- ROUND(SUM(b.TOTAL),2) AS TotalSales, 
-  ROUND((SUM(b.TOTAL) / t.AllSales),2) * 100 AS PercentSales
-FROM 
-  bakery b,
-  TotalSales t
-GROUP BY 
-  b.ITEM, 
-  t.AllSales
-ORDER BY 
-  PercentSales DESC;
-
--- sales trend for best 2 items ('TRADITIONAL BAGUETTE', 'FORMULE SANDWICH')
+-- Hourly sales trends for top products
 WITH HourlySales AS (
-  SELECT 
-    ITEM,
-    DATE_FORMAT(STR_TO_DATE(TIME, '%r'), '%H:00:00') AS SaleHour,
-    SUM(QUANTITY) AS TotalSold
-  FROM bakery
-  WHERE ITEM IN ('TRADITIONAL BAGUETTE', 'FORMULE SANDWICH')
-  GROUP BY SaleHour, ITEM
+    SELECT 
+        ITEM,
+        DATE_FORMAT(STR_TO_DATE(TIME, '%r'), '%H:00:00') AS Sale_hour,
+        SUM(QUANTITY) AS Total_sold
+    FROM bakery
+    WHERE ITEM IN ('TRADITIONAL BAGUETTE', 'FORMULE SANDWICH')
+    GROUP BY Sale_hour, ITEM
 )
 SELECT 
-  ITEM,
-  SaleHour,
-  TotalSold
-FROM 
-  HourlySales
-ORDER BY 
-  ITEM, SaleHour DESC;
-  
-  
-  -- sales trend for premium items ('ROYAL 6P', 'TARTE FRAISE 6P', 'TARTE FRAISE 4PER', 'TRAITEUR', 'TARTE FRUITS 4P')
+    ITEM,
+    Sale_hour,
+    Total_sold
+FROM HourlySales
+ORDER BY ITEM, Sale_hour DESC;
+
+-- Premium items hourly trends
 WITH HourlySales AS (
-  SELECT 
-    ITEM,
-    DATE_FORMAT(STR_TO_DATE(TIME, '%r'), '%H:00:00') AS SaleHour,
-    SUM(QUANTITY) AS TotalSold
-  FROM bakery
-  WHERE ITEM IN ('ROYAL 6P', 'TARTE FRAISE 6P', 'TARTE FRAISE 4PER', 'TRAITEUR', 'TARTE FRUITS 4P')
-  GROUP BY SaleHour, ITEM
+    SELECT 
+        ITEM,
+        DATE_FORMAT(STR_TO_DATE(TIME, '%r'), '%H:00:00') AS Sale_hour,
+        SUM(QUANTITY) AS Total_sold
+    FROM bakery
+    WHERE ITEM IN ('ROYAL 6P', 'TARTE FRAISE 6P', 'TARTE FRAISE 4PER', 'TRAITEUR', 'TARTE FRUITS 4P')
+    GROUP BY Sale_hour, ITEM
 )
 SELECT 
-  ITEM,
-  SaleHour,
-  TotalSold
-FROM 
-  HourlySales
-ORDER BY 
-  ITEM, SaleHour DESC;
+    ITEM,
+    Sale_hour,
+    Total_sold
+FROM HourlySales
+ORDER BY ITEM, Sale_hour DESC;
 
-
--- best month in sales
+-- Monthly sales performance
 SELECT 
-  MONTHNAME(date) AS SaleMonth,
-  SUM(Total) AS TotalSold
+    MONTHNAME(date) AS Sale_month,
+    ROUND(SUM(Total),2) AS Monthly_sales
 FROM bakery
-GROUP BY SaleMonth
-ORDER BY TotalSold DESC;
+GROUP BY Sale_month
+ORDER BY Monthly_sales DESC;
