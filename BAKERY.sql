@@ -1,63 +1,81 @@
 /*
+==========================
 BAKERY SALES ANALYSIS PROJECT
+==========================
 
-This project analyzes sales data from a bakery to uncover business insights including:
-- Key sales metrics and product performance
-- Premium vs standard product categorization
-- Sales trends by time and product categories
-- Inventory turnover rates
-The analysis helps optimize product offerings, pricing strategies, and operational planning.
+Objective:
+Analyze bakery sales data to extract business insights on:
+- Sales performance and trends
+- Product categorization (premium vs standard)
+- Time-based patterns (hourly, monthly)
+- Inventory dynamics
+
+Outcome:
+Optimize pricing, inventory management, and marketing strategies.
 */
 
--- ###############
--- DATA PREPARATION
--- ###############
+-- ========================
+-- SECTION 1: DATA PREPARATION
+-- ========================
 
-USE bakery;  -- Set database context
+-- Set the working database context
+USE bakery;
 
--- Initial data inspection
+-- Preview the first 5 rows of data
 SELECT * FROM bakery LIMIT 5;
 
--- Disable safe update mode for data modifications
+-- Disable safe update mode to allow unrestricted updates
 SET SQL_SAFE_UPDATES = 0;
 
--- Fix column name with encoding artifact
+-- Fix improperly encoded column name
 ALTER TABLE bakery
 CHANGE COLUMN ï»؟ID ID INT;
 
--- Convert text dates to proper DATE format
+-- Convert date strings to proper DATE format
 UPDATE bakery 
 SET DATE = STR_TO_DATE(date, '%c/%e/%Y');
 
--- #########################
--- BASIC SALES METRICS ANALYSIS
--- #########################
 
--- Quantity extremes analysis
+-- ==================================
+-- SECTION 2: BASIC SALES METRICS ANALYSIS
+-- ==================================
+
+-- Find the maximum and minimum quantity sold in a single transaction
 SELECT  
     MAX(QUANTITY) AS Top_quantity,
     MIN(QUANTITY) AS Smallest_quantity
 FROM bakery;
 
--- Price range analysis
+-- Identify the highest and lowest unit prices
 SELECT  
     MAX(unit_price) AS Max_unit_price,
     MIN(unit_price) AS Min_unit_price
 FROM bakery;
 
--- Transaction timeframe analysis
+-- Determine the earliest and latest transaction dates
 SELECT  
     MAX(date) AS Last_transaction,
     MIN(date) AS First_transaction
 FROM bakery;
 
--- ########################
--- PRODUCT PERFORMANCE ANALYSIS
--- ########################
+-- Calculate order frequency and quantity sold per transaction
+SELECT 
+    ticket_number,
+    COUNT(Quantity) AS Order_count,
+    SUM(Quantity) AS Total_quantity_sold
+FROM bakery
+GROUP BY ticket_number 
+ORDER BY Total_quantity_sold DESC;
 
--- Top selling products analysis
+
+-- ==================================
+-- SECTION 3: PRODUCT PERFORMANCE ANALYSIS
+-- ==================================
+
+-- List top-selling products by total sales, with quantity and average price
 SELECT 
     ITEM, 
+    COUNT(Quantity) AS Order_count,
     SUM(QUANTITY) AS Total_quantity,
     ROUND(AVG(UNIT_PRICE),2) AS Avg_price,
     ROUND(SUM(TOTAL),2) AS Total_sales
@@ -65,7 +83,7 @@ FROM bakery
 GROUP BY ITEM
 ORDER BY Total_sales DESC;
 
--- High-demand items (Above average quantity)
+-- Identify high-demand products whose average quantity exceeds overall average
 WITH ItemAverages AS (
     SELECT 
         ITEM, 
@@ -74,17 +92,22 @@ WITH ItemAverages AS (
     GROUP BY ITEM
 )
 SELECT 
-    ITEM, 
-    Item_avg_qty AS Avg_quantity
-FROM ItemAverages
-WHERE Item_avg_qty > (SELECT AVG(QUANTITY) FROM bakery)
+    b.ITEM, 
+    COUNT(b.QUANTITY) AS Order_count,
+    SUM(b.QUANTITY) AS Total_quantity,
+    ia.Item_avg_qty AS Avg_quantity
+FROM bakery b
+JOIN ItemAverages ia ON b.ITEM = ia.ITEM
+WHERE ia.Item_avg_qty > (SELECT AVG(QUANTITY) FROM bakery)
+GROUP BY b.ITEM, ia.Item_avg_qty
 ORDER BY Avg_quantity DESC;
 
--- #########################
--- PREMIUM PRODUCT ANALYSIS
--- #########################
 
--- Premium product identification
+-- ==================================
+-- SECTION 4: PREMIUM PRODUCT ANALYSIS
+-- ==================================
+
+-- Categorize products as Premium or Standard based on unit price > 4x average
 WITH AveragePrice AS (
     SELECT AVG(UNIT_PRICE) AS Avg_price FROM bakery
 ),
@@ -104,7 +127,7 @@ CROSS JOIN ThresholdPrice t
 GROUP BY b.ITEM
 ORDER BY Avg_price DESC;
 
--- Premium product sales contribution
+-- Calculate sales and contribution % of selected premium items
 WITH TotalSales AS (
     SELECT SUM(TOTAL) AS All_sales FROM bakery
 )
@@ -117,19 +140,20 @@ WHERE b.ITEM IN ('ROYAL 6P', 'TARTE FRAISE 6P', 'TARTE FRAISE 4PER', 'TRAITEUR',
 GROUP BY b.ITEM
 ORDER BY Item_sales DESC;
 
--- ########################
--- TEMPORAL ANALYSIS
--- ########################
 
--- Inventory turnover rate
+-- ==============================
+-- SECTION 5: TEMPORAL ANALYSIS
+-- ==============================
+
+-- Measure inventory turnover interval for each product
 SELECT 
     ITEM,
-    DATEDIFF(MAX(date), MIN(date)) AS Days_interval
+    DATEDIFF(MAX(date), MIN(date)) AS Days_available
 FROM bakery
 GROUP BY ITEM
-ORDER BY Days_interval;
+ORDER BY Days_available DESC;
 
--- Hourly sales trends for top products
+-- Analyze hourly sales trends for top products
 WITH HourlySales AS (
     SELECT 
         ITEM,
@@ -144,9 +168,9 @@ SELECT
     Sale_hour,
     Total_sold
 FROM HourlySales
-ORDER BY ITEM, Sale_hour DESC;
+ORDER BY Total_sold DESC;
 
--- Premium items hourly trends
+-- Analyze hourly sales trends for premium products
 WITH HourlySales AS (
     SELECT 
         ITEM,
@@ -163,10 +187,33 @@ SELECT
 FROM HourlySales
 ORDER BY ITEM, Sale_hour DESC;
 
--- Monthly sales performance
+-- Get monthly sales totals
 SELECT 
     MONTHNAME(date) AS Sale_month,
     ROUND(SUM(Total),2) AS Monthly_sales
 FROM bakery
 GROUP BY Sale_month
 ORDER BY Monthly_sales DESC;
+
+-- Calculate Month-over-Month (MoM) percentage change in monthly sales
+WITH MonthlySales AS (
+    SELECT 
+        DATE_FORMAT(date, '%Y-%m') AS Sale_month,
+        ROUND(SUM(Total), 2) AS Monthly_sales
+    FROM bakery
+    GROUP BY Sale_month
+),
+SalesWithChange AS (
+    SELECT 
+        Sale_month,
+        Monthly_sales,
+        LAG(Monthly_sales) OVER (ORDER BY Sale_month) AS Previous_month_sales,
+        ROUND(
+            (Monthly_sales - LAG(Monthly_sales) OVER (ORDER BY Sale_month)) / 
+            LAG(Monthly_sales) OVER (ORDER BY Sale_month) * 100, 
+            2
+        ) AS MoM_change_percentage
+    FROM MonthlySales
+)
+SELECT * FROM SalesWithChange
+ORDER BY Sale_month;
