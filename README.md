@@ -54,8 +54,9 @@ Initial Observations:
 - Traditional Baguettes dominate sales, with "Traditional Baguette" being the best-seller (630 units).
 - Peak sales occur from 10 AM , with €201 in revenue.
 - Coffee and croissants are popular breakfast items, indicating strong morning demand.
+
   
-![Screenshot_13-2-2025_201755_chatgpt com](https://github.com/user-attachments/assets/df9174a3-fe6c-491e-a321-28a027761e11)
+![Screenshot_26-7-2025_213433_chat deepseek com](https://github.com/user-attachments/assets/b8bce037-19b2-4327-934c-9c9928d19bfc)
 
 ## Insights Deep Dive
 
