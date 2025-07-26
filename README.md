@@ -82,7 +82,7 @@ Least-selling items include specialty bread varieties and limited-time pastries.
 
 ### Peak Sales Hours
 - Noon (10 AM) is the busiest hour (€201 in revenue).
-- Mid-morning (9 AM - 11 AM) sees consistent high sales, suggesting strong breakfast demand.
+- Mid-morning (9 AM - 12 PM) sees consistent high sales, suggesting strong breakfast demand.
 - Evening sales are lower, indicating reduced foot traffic after work hours.
 
 ### Customer Purchasing Patterns
