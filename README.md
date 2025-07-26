@@ -51,8 +51,8 @@ Initial Observations:
 ## Executive Summary
 
 **Overview of Findings**
-- Baguettes dominate sales, with "Traditional Baguette" being the best-seller (630 units).
-- Peak sales occur from 11 AM to 12 PM, with €918.85 in revenue at noon.
+- Traditional Baguettes dominate sales, with "Traditional Baguette" being the best-seller (630 units).
+- Peak sales occur from 10 AM , with €201 in revenue.
 - Coffee and croissants are popular breakfast items, indicating strong morning demand.
   
 ![Screenshot_13-2-2025_201755_chatgpt com](https://github.com/user-attachments/assets/df9174a3-fe6c-491e-a321-28a027761e11)
@@ -80,7 +80,7 @@ Top 3 best-selling products:
 Least-selling items include specialty bread varieties and limited-time pastries.
 
 ### Peak Sales Hours
-- Noon (12 PM) is the busiest hour (€918.85 in revenue).
+- Noon (10 AM) is the busiest hour (€201 in revenue).
 - Mid-morning (9 AM - 11 AM) sees consistent high sales, suggesting strong breakfast demand.
 - Evening sales are lower, indicating reduced foot traffic after work hours.
 
