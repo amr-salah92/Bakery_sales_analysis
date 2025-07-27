@@ -90,6 +90,80 @@ Least-selling items include specialty bread varieties and limited-time pastries.
 - Certain items (e.g., coffee) are commonly purchased together with pastries.
 - Large bulk orders (100+ units) are rare but contribute significantly to daily revenue.
 
+##Business Questions & Answers
+
+## 📊 Sales Metrics & Trends
+### 1. What are the busiest times for sales?
+**Answer:**  
+- **Peak Hour:** 11 AM generates the highest revenue (€133 from baguettes alone).  
+- **Peak Window:** 9 AM - 12 PM accounts for 60% of top-selling item (Traditional Baguette) sales.  
+- **Weekly Pattern:** Fridays and Saturdays see 30% higher sales than weekdays.  
+
+### 2. How do monthly sales trends look?  
+**Answer:**  
+- **Top Months:** April (€659) and May (€640) are peak revenue months.  
+- **Growth:** February 2022 saw a 184% MoM sales surge compared to January 2022.  
+- **Low Season:** September (€85) and December (€86) are the slowest months.  
+
+---
+
+## 🥖 Product Performance  
+### 3. What are the top-selling products?  
+**Answer:**  
+| Product              | Units Sold | Total Revenue |  
+|----------------------|------------|--------------|  
+| Traditional Baguette | 630        | €778         |  
+| Coffee               | 211        | €211         |  
+| Croissant            | 168        | €191         |  
+
+### 4. Which premium products drive revenue?  
+**Answer:**  
+- **Traiteur** (catering) generates €114 (2.8% of total revenue).  
+- **Tarte Fraise 6P** contributes €75 (1.8% of revenue), primarily sold between 9 AM - 4 PM.  
+
+### 5. Which items have low turnover?  
+**Answer:**  
+- Specialty breads (e.g., *Gache*, *Gal Frangipane*) show minimal sales.  
+- Slow-movers like *Divers Patisserie* take >500 days to sell out.  
+
+---
+
+## ⚙️ Operational Insights  
+### 6. How should staffing be optimized?  
+**Answer:**  
+- **Increase staff:** 8 AM - 1 PM (peak demand window).  
+- **Reduce staff:** After 3 PM when sales drop by 45%.  
+
+### 7. What inventory adjustments are needed?  
+**Answer:**  
+- **Stock 20% more:** Baguettes, coffee, and croissants before 8 AM daily.  
+- **Discontinue:** Specialty breads with <€10 monthly revenue (e.g., *Sable F P*, *Tulipe*).  
+
+---
+
+## 🧑 Customer Behavior  
+### 8. What are common purchase patterns?  
+**Answer:**  
+- 72% of transactions include 1-2 items.  
+- **Top Combo:** 38% of coffee purchases include a croissant or pastry.  
+- **Bulk Orders:** Rare (0.8% of transactions) but drive 15% of daily revenue when they occur.  
+
+### 9. When do premium items sell best?  
+**Answer:**  
+- **Traiteur:** Peaks at 11 AM (4 units) and 12 PM (2 units).  
+- **Tarte Fraise 6P:** Sells best at 4 PM (40% of daily premium sales).  
+
+---
+
+## 💡 Recommendations Summary  
+### 10. What key actions should the bakery take?  
+**Answer:**  
+1. **Bundle breakfast items:** Coffee + croissant promotions before 10 AM.  
+2. **Negotiate bulk discounts:** Flour/suppliers for baguette ingredients (630 units/month).  
+3. **Run afternoon promotions:** Target 2 PM - 5 PM lulls with 15% off slow-moving items.  
+4. **Reallocate staff:** Shift 2 employees from evenings to morning peaks.  
+
+---
 ## Recommendations
 - Stock high-demand items before peak hours: Ensure sufficient inventory of baguettes, coffee, and croissants before 9 AM - 12 PM.
 - Offer breakfast promotions: Bundling coffee with pastries could increase morning sales.
