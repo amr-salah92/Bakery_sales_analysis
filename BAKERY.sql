@@ -110,22 +110,22 @@ ORDER BY Avg_quantity DESC;
 -- Categorize products as Premium or Standard based on unit price > 4x average
 WITH AveragePrice AS (
     SELECT AVG(UNIT_PRICE) AS Avg_price FROM bakery
-),
+), 
 ThresholdPrice AS (
-    SELECT Avg_price * 4 AS Premium_threshold 
-    FROM AveragePrice
+    SELECT Avg_price * 4 AS Premium_threshold FROM AveragePrice
 )
 SELECT 
     b.ITEM, 
     ROUND(AVG(b.UNIT_PRICE),2) AS Avg_price,
     CASE 
-        WHEN AVG(b.UNIT_PRICE) > t.Premium_threshold THEN 'Premium'
+        WHEN AVG(b.UNIT_PRICE) > MAX(t.Premium_threshold) THEN 'Premium'
         ELSE 'Standard'
     END AS Price_category
-FROM bakery b
+FROM bakery b 
 CROSS JOIN ThresholdPrice t
 GROUP BY b.ITEM
 ORDER BY Avg_price DESC;
+
 
 -- Calculate sales and contribution % of selected premium items
 WITH TotalSales AS (
@@ -133,12 +133,14 @@ WITH TotalSales AS (
 )
 SELECT 
     b.ITEM,
-    ROUND(SUM(b.TOTAL),2) AS Item_sales,
-    ROUND((SUM(b.TOTAL)/ts.All_sales)*100, 2) AS Sales_percentage
-FROM bakery b, TotalSales ts
+    ROUND(SUM(b.TOTAL), 2) AS Item_sales,
+    ROUND((SUM(b.TOTAL) / MAX(ts.All_sales)) * 100, 2) AS Sales_percentage
+FROM bakery b
+CROSS JOIN TotalSales ts
 WHERE b.ITEM IN ('ROYAL 6P', 'TARTE FRAISE 6P', 'TARTE FRAISE 4PER', 'TRAITEUR', 'TARTE FRUITS 4P')
 GROUP BY b.ITEM
 ORDER BY Item_sales DESC;
+
 
 
 -- ==============================
